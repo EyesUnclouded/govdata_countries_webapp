@@ -1,0 +1,43 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>About this project</title>
+</head>
+<body>
+    {% extends "template.html" %}
+    {% block content %}
+     <div class="container">
+        <h1>European Open Data Analysis</h1>
+        <p> Analysis and visualisation of open data from the European countries  </p>
+        <button type="button" class="btn btn-primary btn-lg" id="pull_data_btn">Update Data</button>
+        <p>Pull data from the official European open data portal's API</p>
+        <div class="alert alert-warning" role="alert">
+          Warning! Pulling the data from the Api takes a long time!
+        </div>
+
+    </div>
+
+
+
+    <script>
+
+    $("#pull_data_btn").click(function() {
+        pull_data();
+    });
+
+    function pull_data(){
+        $.ajax({
+            type: 'POST',
+            url: "/_pull_data",
+            dataType: "text",
+            success: function(data){
+                alert(data);
+            }
+        });
+    }
+    </script>
+
+    {% endblock %}
+</body>
+</html>

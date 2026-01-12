@@ -1,0 +1,80 @@
+/* https://getbootstrap.com/docs/4.0/layout/overview/ */
+/* Extra small devices (portrait phones, less than 576px) */
+
+@media (min-width: 1024px) {
+    #analysis_container {
+        max-width: 960px;
+    }
+}
+
+@media (min-width: 1200px) {
+    #analysis_container {
+        max-width: 1140px;
+    }
+}
+
+.dropdown-item-text{
+    color: #A9A9A9 !important;
+}
+.dropdown-menu{
+    z-index: 2000 !important;
+}
+/*
+#analysis {
+   background-color:#f7f7f9 !important;
+}
+*/
+#visualization {
+    overflow: hidden;
+}
+
+#europe_map {
+    height: 600px;
+}
+
+.info {
+    padding: 6px 8px;
+    font: 14px/16px Arial, Helvetica, sans-serif;
+    background: white;
+    background: rgba(255,255,255,0.8);
+    box-shadow: 0 0 15px rgba(0,0,0,0.2);
+    border-radius: 5px;
+}
+.info h4 {
+    margin: 0 0 5px;
+    color: #777;
+}
+
+.legend {
+    line-height: 18px;
+    color: #555;
+}
+
+.legend i {
+    width: 18px;
+    height: 18px;
+    float: left;
+    margin-right: 8px;
+    opacity: 1;
+}
+
+.canvas-holder {
+    width:85%;
+}
+
+
+.container-fluid.slideup {
+    max-height: 0;
+    overflow-y: hidden;
+    -webkit-transition: max-height 0.5s ease-in-out;
+    -moz-transition: max-height 0.5s ease-in-out;
+    -o-transition: max-height 0.5s ease-in-out;
+    transition: max-height 0.5s ease-in-out;
+}
+.container-fluid.slidedown {
+    max-height: none;
+    -webkit-transition: max-height 0.5s ease-in-out;
+    -moz-transition: max-height 0.5s ease-in-out;
+    -o-transition: max-height 0.5s ease-in-out;
+    transition: max-height 0.5s ease-in-out;
+}

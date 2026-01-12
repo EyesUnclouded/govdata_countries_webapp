@@ -1,0 +1,547 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Open Government Data Countries</title>
+</head>
+<body>
+    {% extends "template.html" %}
+    {% block content %}
+    <div id="analysis_container" class="container-fluid">
+    <div id="analysis" class="jumbotron">
+
+        <h1 class="display-4">European Open Data Analysis</h1>
+        <p class="lead">Choose a method to analyze open data of the European Data Portal and visualize it by either map or graph. </p>
+        <hr class="my-4">
+
+        <!-- Default dropup button -->
+        <div class="btn-group dropup">
+          <button type="button" class="btn btn-primary dropdown-toggle" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+            Choose a method
+          </button>
+          <div class="dropdown-menu">
+            <!-- Dropdown menu links -->
+              <span class="dropdown-item-text">Frequencies</span>
+            <a class="dropdown-item" onclick="activateMethod('count_all_datasets')">All Datasets</a>
+
+            <a class="dropdown-item" onclick="activateMethod('count_accessible')">Accessible Datasets</a>
+
+            <a class="dropdown-item" onclick="activateMethod('count_empty_licenses')">Datasets with License</a>
+
+            <a class="dropdown-item" onclick="activateMethod('count_open_licenses')">Open License</a>
+
+            <a class="dropdown-item" onclick="activateMethod('count_linked_data')">Linked Data</a>
+
+            <div class="dropdown-divider"></div>
+
+            <span class="dropdown-item-text">Clustering</span>
+            <a class="dropdown-item" onclick="activateMethod('cluster_categories')">Thematic Categories</a>
+
+            <a class="dropdown-item" onclick="activateMethod('cluster_publication_timeline')">Timeliness</a>
+
+            <a class="dropdown-item" onclick="activateMethod('cluster_formats')">Open Formats</a>
+          </div>
+        </div>
+        <div id="method_loading" class="spinner-border text-primary"></div>
+        <hr class="my-4">
+
+        <div id="visualization" class="container-fluid collapse show">
+
+        </div>
+    </div>
+    </div>
+
+    <script src="{{ url_for('static',    filename='js/helper_functions.js') }}"></script>
+    <script src="{{ url_for('static',    filename='js/visualize_country_pie.js') }}"></script>
+    <script src="{{ url_for('static',    filename='js/visualize_licenses_chart.js') }}"></script>
+    <script src="{{ url_for('static',    filename='js/visualize_publication_chart.js') }}"></script>
+    <script src="{{ url_for('static',    filename='js/visualize_categories_chart.js') }}"></script>
+    <script src="{{ url_for('static',    filename='js/visualize_formats_chart.js') }}"></script>
+    <script src="{{ url_for('static',    filename='js/map_visualization.js') }}"></script>
+
+    <script src="{{ url_for('static',    filename='js/chartjs-plugin-datalabels.min.js') }}"></script>
+
+    <script>
+    Chart.defaults.global.defaultFontColor = 'black';
+    $("#method_loading").hide();
+    var data_count_all;
+
+    var storage_support;
+    if (typeof(Storage) !== "undefined") {
+        storage_support = true;
+        sessionStorage.clear();
+    } else {
+        storage_support = false;
+    }
+
+    function count_country(country_id){
+         $.ajax({
+             type: 'POST',
+             url: "/_count_country",
+             data: {
+                 country_id: country_id
+             },
+             dataType: "json",
+             success: function (data) {
+                 if (data['status'] === 'OK') {
+                     visualize_country_pie(data['data']);
+
+                     changeURL('count_country', {'country_id': country_id});
+
+                     loading_hide();
+
+                 } else alert('FAIL');
+             }
+         });
+    }
+
+    function count_all_datasets(){
+        if (storage_support && sessionStorage.count_all_datasets){
+            var map = visualize_map('count', JSON.parse(sessionStorage.getItem('count_all_datasets')));
+
+            loading_hide();
+
+            map.invalidateSize(true);
+        }
+        else {
+            $.ajax({
+                type: 'POST',
+                url: "/_count_all_datasets",
+                dataType: "json",
+                success: function (data) {
+                    var map = visualize_map('count', data['data']);
+
+                    loading_hide();
+
+                    map.invalidateSize(true);
+
+                    if (storage_support) sessionStorage.setItem('count_all_datasets', JSON.stringify(data['data']));
+                }
+            });
+        }
+
+        changeURL('count_all_datasets');
+    }
+
+    function count_accessible(){
+        if (storage_support && sessionStorage.count_accessible){
+            var map = visualize_map('count', JSON.parse(sessionStorage.getItem('count_accessible')), {'percent': 'accessible'});
+
+            loading_hide();
+
+            map.invalidateSize(true);
+        }
+        else {
+            $.ajax({
+                type: 'POST',
+                url: "/_count_accessible",
+                dataType: "json",
+                success: function (data) {
+                    var map = visualize_map('count', data['data'], {'percent': 'accessible'});
+
+                    loading_hide();
+
+                    map.invalidateSize(true);
+
+                    if (storage_support) sessionStorage.setItem('count_accessible', JSON.stringify(data['data']));
+                }
+            });
+        }
+
+        changeURL('count_accessible');
+    }
+
+    function country_licenses(country_id){
+         $.ajax({
+             type: 'POST',
+             url: "/_country_licenses",
+             data: {
+                 country_id: country_id
+             },
+             dataType: "json",
+             success: function (data) {
+                 if (data['status'] === 'OK') {
+                     visualize_licenses_chart(data['data']);
+
+                     changeURL('country_licenses', {'country_id': country_id});
+
+                     loading_hide();
+
+                 } else alert('FAIL');
+             }
+         });
+    }
+
+    function count_empty_licenses (){
+         if (storage_support && sessionStorage.count_empty_licenses){
+            var map = visualize_map('count', JSON.parse(sessionStorage.getItem('count_empty_licenses')), {'percent': 'empty_licenses'});
+
+            loading_hide();
+
+            map.invalidateSize(true);
+        }
+        else {
+            $.ajax({
+                type: 'POST',
+                url: "/_count_empty_licenses",
+                dataType: "json",
+                success: function (data) {
+                    var map = visualize_map('count', data['data'], {'percent': 'empty_licenses'});
+
+                    loading_hide();
+
+                    map.invalidateSize(true);
+
+                    if (storage_support) sessionStorage.setItem('count_empty_licenses', JSON.stringify(data['data']));
+                }
+            });
+        }
+
+        changeURL('count_empty_licenses');
+    }
+
+    function count_open_licenses(){
+        if (storage_support && sessionStorage.count_open_licenses){
+            var map = visualize_map('count', JSON.parse(sessionStorage.getItem('count_open_licenses')), {'percent': 'licenses'});
+
+            loading_hide();
+
+            map.invalidateSize(true);
+        }
+        else {
+            $.ajax({
+                type: 'POST',
+                url: "/_count_open_licenses",
+                dataType: "json",
+                success: function (data) {
+                    var map = visualize_map('count', data['data'], {'percent': 'licenses'});
+
+                    loading_hide();
+
+                    map.invalidateSize(true);
+
+                    if (storage_support) sessionStorage.setItem('count_open_licenses', JSON.stringify(data['data']));
+                }
+            });
+        }
+
+        changeURL('count_open_licenses');
+    }
+
+    function count_linked_data(){
+        if (storage_support && sessionStorage.count_linked_data){
+            var map = visualize_map('count', JSON.parse(sessionStorage.getItem('count_linked_data')), {'percent': 'linked'});
+
+            loading_hide();
+
+            map.invalidateSize(true);
+        }
+        else {
+            $.ajax({
+                type: 'POST',
+                url: "/_count_linked_data",
+                dataType: "json",
+                success: function (data) {
+                    var map = visualize_map('count', data['data'], {'percent': 'linked'});
+
+                    loading_hide();
+
+                    map.invalidateSize(true);
+
+                    if (storage_support) sessionStorage.setItem('count_linked_data', JSON.stringify(data['data']));
+                }
+            });
+        }
+
+        changeURL('count_linked_data');
+    }
+
+
+    function publication_timeline(countries = '', cluster = 0){
+        var countries_str = countries.toString();
+        var countries_data = {};
+        var clusters_average_distributions = {};
+        if (storage_support && sessionStorage.countries_timeliness_factors){
+            countries_data = JSON.parse(sessionStorage.getItem('countries_timeliness_factors'));
+            clusters_average_distributions = JSON.parse(sessionStorage.getItem('publication_timeline_clusters_average_distributions'));
+        }
+        $.ajax({
+            type: 'POST',
+            url: "/_publication_timeline",
+            data: {
+                cluster: cluster,
+                countries: countries_str,
+                countries_data: JSON.stringify(countries_data),
+                clusters_average_distributions: JSON.stringify(clusters_average_distributions)
+              },
+            dataType: "json",
+            success: function(data){
+
+                visualize_publication_chart(data['data_monthly'], data['start_month'], data['data_factors'], cluster, data['average_distribution']);
+
+                changeURL('publication_timeline', {'country_id': countries.toString(), 'cluster': cluster});
+
+                loading_hide();
+            }
+        });
+    }
+
+    function categories(countries = '', cluster = 0){
+        var countries_str = countries.toString();
+        var countries_data = {};
+        var clusters_average_distributions = {};
+        if (storage_support && sessionStorage.categories_countries_data){
+            countries_data = JSON.parse(sessionStorage.getItem('categories_countries_data'));
+            clusters_average_distributions = JSON.parse(sessionStorage.getItem('categories_clusters_average_distributions'));
+        }
+        $.ajax({
+            type: 'POST',
+            url: "/_categories",
+            data: {
+                cluster: cluster,
+                countries: countries_str,
+                countries_data: JSON.stringify(countries_data),
+                clusters_average_distributions: JSON.stringify(clusters_average_distributions)
+              },
+            dataType: "json",
+            success: function(data){
+
+                visualize_categories_chart(data['data'], data['categories'], cluster, data['average_distribution']);
+
+                changeURL('categories', {'country_id': countries.toString(), 'cluster': cluster.toString()});
+
+                loading_hide();
+
+            }
+        });
+    }
+
+    function formats(countries = '', cluster = 0){
+        var countries_str = countries.toString();
+        var countries_data = {};
+        var clusters_average_distributions = {};
+        if (storage_support && sessionStorage.formats_countries_data){
+            countries_data = JSON.parse(sessionStorage.getItem('formats_countries_data'));
+            clusters_average_distributions = JSON.parse(sessionStorage.getItem('formats_clusters_average_distributions'));
+        }
+
+        $.ajax({
+            type: 'POST',
+            url: "/_formats",
+            data: {
+                cluster: cluster,
+                countries: countries_str,
+                countries_data: JSON.stringify(countries_data),
+                clusters_average_distributions: JSON.stringify(clusters_average_distributions)
+              },
+            dataType: "json",
+            success: function(data){
+
+                visualize_formats_chart(data['data'], data['categories'], cluster, data['average_distribution']);
+
+                changeURL('formats', {'country_id': countries.toString(), 'cluster': cluster.toString()});
+
+                loading_hide();
+            }
+        });
+    }
+
+    function cluster_publication_timeline(){
+        if (storage_support && sessionStorage.cluster_publication_timeline){
+            var map = visualize_map('cluster', JSON.parse(sessionStorage.getItem('cluster_publication_timeline')), {'cluster_type': 'publication_timeline', 'n_clusters': sessionStorage.getItem('publication_timeline_n_clusters')});
+
+            loading_hide();
+
+            map.invalidateSize(true);
+        }
+        else {
+            $.ajax({
+                type: 'POST',
+                url: "/_cluster_publication_timeline",
+                dataType: "json",
+                success: function (data) {
+
+                    var map = visualize_map('cluster', data['data'], {'cluster_type': 'publication_timeline', 'n_clusters': data['n_clusters']});
+
+                    loading_hide();
+
+                    map.invalidateSize(true);
+
+                    if (storage_support) {
+                        sessionStorage.setItem('cluster_publication_timeline', JSON.stringify(data['data']));
+                        sessionStorage.setItem('publication_timeline_n_clusters', data['n_clusters']);
+                        sessionStorage.setItem('countries_timeliness_factors', JSON.stringify(data['countries_timeliness_factors']));
+                        sessionStorage.setItem('publication_timeline_clusters_average_distributions', JSON.stringify(data['clusters_average_distributions']));
+                    }
+
+                }
+            });
+        }
+        changeURL('cluster_publication_timeline');
+    }
+
+    function cluster_categories(){
+        if (storage_support && sessionStorage.cluster_categories){
+            console.log('load from storage:');
+            //console.log(JSON.parse(sessionStorage.getItem('cluster_categories')));
+            var map = visualize_map('cluster', JSON.parse(sessionStorage.getItem('cluster_categories')), {'cluster_type': 'categories', 'n_clusters': sessionStorage.getItem('categories_n_clusters')});
+
+            loading_hide();
+
+            map.invalidateSize(true);
+        }
+        else {
+            $.ajax({
+                type: 'POST',
+                url: "/_cluster_categories",
+                dataType: "json",
+                success: function (data) {
+                    var map = visualize_map('cluster', data['data'], {'cluster_type': 'categories', 'n_clusters': data['n_clusters']});
+
+                    loading_hide();
+
+                    map.invalidateSize(true);
+
+                    if (storage_support){
+                        sessionStorage.setItem('cluster_categories', JSON.stringify(data['data']));
+                        sessionStorage.setItem('categories_n_clusters', data['n_clusters']);
+                        sessionStorage.setItem('categories_countries_data', JSON.stringify(data['categories_countries_data']));
+                        sessionStorage.setItem('categories_clusters_average_distributions', JSON.stringify(data['clusters_average_distributions']));
+                    }
+                }
+            });
+        }
+        changeURL('cluster_categories');
+    }
+
+    function cluster_formats(){
+        if (storage_support && sessionStorage.cluster_formats){
+            var map = visualize_map('cluster', JSON.parse(sessionStorage.getItem('cluster_formats')), {'cluster_type': 'formats', 'n_clusters': sessionStorage.getItem('formats_n_clusters')});
+
+            loading_hide();
+
+            map.invalidateSize(true);
+        }
+        else {
+            $.ajax({
+                type: 'POST',
+                url: "/_cluster_formats",
+                dataType: "json",
+                success: function (data) {
+                    var map = visualize_map('cluster', data['data'], {'cluster_type': 'formats', 'n_clusters': data['n_clusters']});
+
+                    loading_hide();
+
+                    map.invalidateSize(true);
+
+                    if (storage_support) {
+                        sessionStorage.setItem('cluster_formats', JSON.stringify(data['data']));
+                        sessionStorage.setItem('formats_n_clusters', data['n_clusters']);
+
+                        sessionStorage.setItem('formats_countries_data', JSON.stringify(data['countries_data']));
+
+                        sessionStorage.setItem('formats_clusters_average_distributions', JSON.stringify(data['clusters_average_distributions']));
+                    }
+                }
+            });
+        }
+        changeURL('cluster_formats');
+    }
+
+    function activateMethod(method = decodeURIComponent($.urlParam('method')), params = {}){
+
+        loading_show();
+
+        switch(method) {
+            case 'count_country':
+
+                if (!('country_id' in params)) {
+                    params['country_id'] = decodeURIComponent($.urlParam('country_id'));
+                }
+
+                count_country(params['country_id']);
+                break;
+            case 'country_licenses':
+
+                if (!('country_id' in params)) {
+                    params['country_id'] = decodeURIComponent($.urlParam('country_id'));
+                }
+
+                country_licenses(params['country_id']);
+                break;
+            case 'count_all_datasets':
+                count_all_datasets();
+                break;
+            case 'count_accessible':
+                count_accessible();
+                break;
+            case 'count_empty_licenses':
+                count_empty_licenses();
+                break;
+            case 'count_open_licenses':
+                count_open_licenses();
+                break;
+            case 'count_linked_data':
+                count_linked_data();
+                break;
+            case 'publication_timeline':
+                if (!('countries' in params)) {
+                    params['countries'] = decodeURIComponent($.urlParam('country_id')).split(',');
+                }
+                if (!('cluster' in params)) {
+                    if ($.urlParam('cluster') != null){
+                        params['cluster'] = decodeURIComponent($.urlParam('cluster'));
+                    }
+                    else params['cluster'] = 0;
+                }
+                publication_timeline(params['countries'], params['cluster']);
+                break;
+            case 'cluster_publication_timeline':
+                cluster_publication_timeline();
+                break;
+            case 'categories':
+                if (!('countries' in params)) {
+                    params['countries'] = decodeURIComponent($.urlParam('country_id')).split(',');
+                }
+                if (!('cluster' in params)) {
+                    if ($.urlParam('cluster') != null){
+                        params['cluster'] = decodeURIComponent($.urlParam('cluster'));
+                    }
+                    else params['cluster'] = 0;
+
+                }
+                categories(params['countries'], params['cluster']);
+                break;
+            case 'cluster_categories':
+                cluster_categories();
+                break;
+            case 'formats':
+                if (!('countries' in params)) {
+                    params['countries'] = decodeURIComponent($.urlParam('country_id')).split(',');
+                }
+                if (!('cluster' in params)) {
+                    if ($.urlParam('cluster') != null){
+                        params['cluster'] = decodeURIComponent($.urlParam('cluster'));
+                    }
+                    else params['cluster'] = 0;
+                }
+                formats(params['countries'], params['cluster']);
+                break;
+            case 'cluster_formats':
+                cluster_formats();
+                break;
+            default:
+                count_all_datasets();
+        }
+    }
+    window.onload = function () {
+        activateMethod();
+    }
+
+    window.onpopstate = function() {
+        activateMethod();
+    }
+    </script>
+    {% endblock %}
+</body>
+</html>
