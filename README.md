@@ -1,7 +1,11 @@
 A python flask SPA that I created in 2018 for my master's thesis.
 
-This project was created purely for non-commercal purposes.
+This project was created purely for non-commercal academic purposes.
 
-It uses a MySQL Database with metadata imported from the european data portal https://data.europa.eu/en API. 
+It uses a MySQL Database populated metadata imported from the european data portal https://data.europa.eu/en API. 
 
-There are a lot of bad practices like not properly building functions that can be reused and writing long badly optimized SQL queries in code.
+There certainly are a lot of areas where the code could be improved.
+
+In general the code should have been more structured, especially the "Controller"-script app.py which got pretty cluttered in the end.
+
+The complex SQL queries can be better optimized and maybe also should have been Stored Processes in the MySQL Database.
